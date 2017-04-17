@@ -10,7 +10,7 @@ namespace ProcessorsApp
     class ProcessorsLoader
     {
 
-        public static List<Processor> ProcessorsFromAssembly(String name)
+        public static List<Processor> ProcessorsWithReflection(String name)
         {
             List<Processor> list = new List<Processor>();
             Assembly asm = Assembly.LoadFrom(name);

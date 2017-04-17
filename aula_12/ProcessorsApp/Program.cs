@@ -45,7 +45,7 @@ namespace ProcessorsApp
             Processors processors =
                 new Processors();
             processors.Add(new SumN(1));
-            processors.Add(ProcessorsLoader.ProcessorsFromAssembly(
+            processors.Add(ProcessorsLoader.ProcessorsWithReflection(
                 @"c:\assemblies\ExternalProcessors.dll"));
             processors.Add(ProcessorsLoader.ProcessorsWithEmit(
                 @"c:\assemblies\ExternalProcessors.dll"));
