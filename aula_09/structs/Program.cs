@@ -15,6 +15,14 @@ namespace structs
         {
             this.x = this.x + offx;
         }
+        public bool Equals(Point p)
+        {
+            return this.x == p.x && this.y == p.y;
+        }
+        public override string ToString()
+        {
+            return "X=" + this.x + " Y=" + this.y;
+        }
     }
 
     class Program
@@ -23,15 +31,16 @@ namespace structs
         static void Main(string[] args)
         {
             Program prg = new Program();
-            Point p2 = new Point();
+            Point p2 = new Point(10, 20);
             Point p1 = new Point(10, 20);
 
-            p1.Add(2, 3);
+            //p1.Add(2, 3);
 
             object o = p1;          // box
             Point p3 = (Point)o;    // unbox
 
-            Console.WriteLine(p1);
+            Console.WriteLine(p1.Equals(p2));
+            Console.WriteLine(p1.ToString());
 
         }
     }
