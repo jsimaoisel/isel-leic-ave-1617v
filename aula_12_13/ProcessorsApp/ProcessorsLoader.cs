@@ -63,15 +63,21 @@ namespace ProcessorsApp
             Type[] types = asm.GetTypes();
             foreach (Type t in types)
             {
-                object _this = null;
+                object target = null;
                 foreach (MethodInfo mi in t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
                 {
                     if (IsProcessor(mi))
                     {
+                        if (!mi.IsStatic && target == null)
+                        {
+                            // método de instancia mas ainda não foi
+                            // criada um object do tipo representado por 't'
+                            target = Activator.CreateInstance(t);
+                        }
                         Type processorType =
-                            CreateDynamicProcessor(mb, _this, mi);
+                            CreateDynamicProcessor(mb, mi);
                         Processor p = (Processor)
-                            Activator.CreateInstance(processorType);
+                            Activator.CreateInstance(processorType, target);
                         list.Add(p);
                     }
                 }
@@ -80,13 +86,36 @@ namespace ProcessorsApp
             return list;
         }
 
-        private static Type CreateDynamicProcessor(ModuleBuilder mb, object _this, MethodInfo mi)
+        private static Type CreateDynamicProcessor(ModuleBuilder mb, MethodInfo mi)
         {
             TypeBuilder tb = mb.DefineType(
                 "ProcessorFor" + mi.Name,
             TypeAttributes.Public);
 
             tb.AddInterfaceImplementation(typeof(Processor));
+
+            FieldBuilder fb = tb.DefineField(
+                "target",
+                mi.DeclaringType,
+                FieldAttributes.Private);
+
+            ConstructorBuilder cb = tb.DefineConstructor(
+                MethodAttributes.Public,
+                CallingConventions.ExplicitThis,
+                new Type[] { mi.DeclaringType });
+
+            ILGenerator ctor1IL = cb.GetILGenerator();
+            // call object ctor
+            ctor1IL.Emit(OpCodes.Ldarg_0);
+            ctor1IL.Emit(OpCodes.Call,
+                typeof(object).GetConstructor(Type.EmptyTypes));
+            // load this
+            ctor1IL.Emit(OpCodes.Ldarg_0);
+            // load ctor parameter
+            ctor1IL.Emit(OpCodes.Ldarg_1);
+            // store field
+            ctor1IL.Emit(OpCodes.Stfld, fb);
+            ctor1IL.Emit(OpCodes.Ret);
 
             MethodBuilder meth = tb.DefineMethod(
                 "Process",
@@ -95,12 +124,19 @@ namespace ProcessorsApp
                 new Type[] { typeof(double[]) });
 
             ILGenerator methIL = meth.GetILGenerator();
-            methIL.Emit(OpCodes.Ldstr, "Hello Emit!");
-            methIL.Emit(OpCodes.Call,
-                typeof(System.Console).
-                GetMethod("WriteLine", new Type[] { typeof(String) }));
-            methIL.Emit(OpCodes.Ret);
-
+            if (!mi.IsStatic)
+            {
+                // load "target" to eval stack
+                // load this
+                methIL.Emit(OpCodes.Ldarg_0);
+                // load field "target"
+                methIL.Emit(OpCodes.Ldfld, fb);
+            }
+            // load double[] to eval stack
+            methIL.Emit(OpCodes.Ldarg_1);
+            // call method
+            methIL.Emit(OpCodes.Call, mi);
+            methIL.Emit(OpCodes.Ret);   
             return tb.CreateType();
         }
     }
