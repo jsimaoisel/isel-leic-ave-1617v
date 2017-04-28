@@ -34,6 +34,9 @@ namespace Hierarchy
             A a = ((A)i);
             a.M2();
             a.M1();
+
+            C c = ((C)a);
+            c.M1();
         }
     }
 }
