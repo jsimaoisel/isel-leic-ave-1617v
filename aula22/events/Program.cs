@@ -20,6 +20,7 @@ namespace events
          *      OnClick -= a;
          * }
          */
+
         public void m()
         {
             if (OnClick != null)
@@ -31,11 +32,7 @@ namespace events
 
 
     class Program
-    {
-        int x;
-
-
-
+    {   
         static void Main(string[] args)
         {
             Button btn = new Button();
